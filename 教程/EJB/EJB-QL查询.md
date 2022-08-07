@@ -1,7 +1,7 @@
 ## EJB3 QL查询
 EJB3的查询语言是一种和SQL非常类似的中间性和对象化查询语言。它可以被编译成不同的底层数据库能接受的SQL，从而屏蔽不同数据库的差异，确保用EJB3 QL查询语言编写的代码可在不同的数据库上运行。比起EJB 2.1的查询语言，EJB3可以运行期构造，支持多态，远远比EJB 2.1的查询更灵活和功能强大。在程序中使用EJB3 QL可以使用大写(SELECT)或者小写(select)，但不要大小写(比如:Select)混合使用。
 
-## Query接口
+### Query接口
 javax.persistence.Query是EJB3查询操作的接口。
 进行查询，首先要通过EntityManager 获得Query对象。
 ```
@@ -17,16 +17,20 @@ public class test() {
 }
 
 ```
-注意"from Order"。"Order"在EJB3查询中称为com.redsoft.samples.Order类的abstract schema Type。
-查询Entity在EJB3 QL中都是针对Entity的Abstract Schema Type进行查询。 
+
+注意"from Order"。
+
+"Order"在EJB3查询中称为com.redsoft.samples.Order类的abstract schema Type。查询Entity在EJB3 QL中都是针对Entity的Abstract Schema Type进行查询。 
 
 在同一个EntityManagerFactory中，不允许同时有两个Abstract Schema Type相同的Entity类。
-比如不允许同时有com.redsoft.samples.Order和com.redsoft.foo.Order。　　\
+比如不允许同时有com.redsoft.samples.Order和com.redsoft.foo.Order。
 
 Query返回一个List的集合结果，我们可以用Iterator或者List.get( int )的方法来获得每个符合条件的Entity。
 
-Liberator EJB3 Persistence运行环境的Query查询 
-在构造Query的时候的只是把EJB3 QL编译成相应的SQL，但并不执行。只有当应用代码第一次调用Iterator.next(),Iterator.hasNext()或者List.get( int )方法的时候,编译后的SQL才会被真正的执行。在Liberator EJB3 Persistence运行环境返回的结果集合中，并不保存所有的结果，而只是保持一个指向JDBC ResultSet或者缓存ResultSet的一个行(row)指针。只有当用户确实需要获得Entity实例的时候，才会从ResultSet中获取数据并填充到Entity实例中返回给应用。
+### Liberator EJB3 Persistence运行环境的Query查询
+在构造Query的时候的只是把EJB3 QL编译成相应的SQL，但并不执行。只有当应用代码第一次调用Iterator.next(),Iterator.hasNext()或者List.get( int )方法的时候,编译后的SQL才会被真正的执行。
+
+在Liberator EJB3 Persistence运行环境返回的结果集合中，并不保存所有的结果，而只是保持一个指向JDBC ResultSet或者缓存ResultSet的一个行(row)指针。只有当用户确实需要获得Entity实例的时候，才会从ResultSet中获取数据并填充到Entity实例中返回给应用。
 
 如果查询结果结合中包含所有符合条件的Entity, Liberator EJB3 Persistence运行环境默认会自动缓存每次查询的结果。这样下次同样的查询操作就无需访问数据库，而直接从缓存中返回结果集合。但如果在下次查询操作之前，有针对被缓存的Entity类进行update/insert/delete操作，则缓存的结果集合会自动被清空，这样下次查询就会从数据库获得数据， 确保查询总是获得正确的结果，避免缓存脏数据。有时候查询会返回海量的数据。
 
@@ -109,7 +113,7 @@ String customerName = row[1].toString();
 String streetNumber = Integer.parseInt( row[2].toString() );
 ```
 
-## 查询中使用构造器(Constructor)EJB3 
+### 查询中使用构造器(Constructor)EJB3 
 QL支持将查询的属性结果直接作为一个java class的构造器参数，并产生实体作为结果返回。
 ```
 // 我们把需要的三个属性作为一个class( OrderHolder )的构造器参数，并使用new函数。
@@ -119,7 +123,7 @@ HolderList result = query.getResultList();
 ```
 该java class不需要是Entity Class。NEW要求java class使用全名。聚合查询(Aggregation)象大部分的SQL一样,
 
-## EJB3 QL也支持查询中的聚合函数
+### EJB3 QL也支持查询中的聚合函数
 目前EJB QL支持的聚合函数包括：
 	* AVG
 	* SUM
@@ -137,19 +141,19 @@ fina long max = Long.parseLong( result.toString() );
 ```
 
 聚合函数也可以作为被查询的一个属性返回。
-
+```
 // 返回所有的订单的生产厂商和他们的订单价值总额
 final Query query= entityManager.createQuery( "select o.vender, sum(o.amount) FROM Order o　group by o.vender");");
+```
+和SQL一样，如果聚合函数不是select...from的唯一一个返回列，需要使用"GROUP BY"语句。"GROUP BY"应该包含select语句中除了聚合函数外的所有属性。
 
-和SQL一样，如果聚合函数不是select...from的唯一一个返回列，需要使用"GROUP BY"语句。
-
-"GROUP BY"应该包含select语句中除了聚合函数外的所有属性。
-
+```
 // 返回所有的订单的生产厂商的的名字，货物号码和每种货物的订单价值总额
 // 注意group by后面必须包含o.vender和o.partNumber
 final Query query= entityManager.createQuery( "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber");
-
+```
 如果还需要加上查询条件，需要使用"HAVING"条件语句而不是"WHERE"语句。
+
 ```
 // 返回所有的订单的生产厂商是"foo"的货物号码和每种货物的订单价值总额
 // 这里"having o.vender = 'foo'为条件
@@ -168,7 +172,11 @@ final List result = query.getResultList();
 ```
 final Query query = entityManager.createQuery( "select o from Order owhere o.address.streetNumber=2000 order by o.id");
 ```
-当这个句EJB3 QL编译成以下的SQL时就会自动包含了关联,EJB3 QL编译成SQL时关联默认取左关联(left join)。select o.id, o.vender, o.partNumber, o.amount, addressTable.id, addressTable.streetNumberfrom orderTable as o left join addressTable where addressTable.streetNumber = 2000但在一些情况下，我们仍然需要对关联做精确的控制。
+当这个句EJB3 QL编译成以下的SQL时就会自动包含了关联,EJB3 QL编译成SQL时关联默认取左关联(left join)。
+```
+select o.id, o.vender, o.partNumber, o.amount, addressTable.id, addressTable.streetNumberfrom orderTable as o left join addressTable where addressTable.streetNumber = 2000
+```
+但在一些情况下，我们仍然需要对关联做精确的控制。
 
 因此EJB3 QL仍然支持和SQL中类似的关联语法：
 	* left out join/left join
@@ -190,7 +198,11 @@ final Query query = entityManager.createQuery( "select o from Order owhere o.add
 需要显式使用left join/left outer join的情况会比较少。inner join要求右边的表达式必须返回Entities。
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
-final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");left/left out/inner join fetch提供了一种灵活的查询加载方式来提高查询的性能。在默认的查询中，Entity中的集合属性默认不会被关联，集合属性默认是缓加载( lazy-load )。
+final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");
+```
+### left/left out/inner join 
+fetch提供了一种灵活的查询加载方式来提高查询的性能。在默认的查询中，Entity中的集合属性默认不会被关联，集合属性默认是缓加载( lazy-load )。
+```
 // 默认EJB3 QL编译后不关联集合属性变量(orderItems)对应的表
 final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");final List result = query.getResultList();
 // 这时获得Order实体中orderItems( 集合属性变量 )为空
@@ -198,7 +210,7 @@ final Order order = (Order)result.get( 0 )
 // 当应用需要时，EJB3 Runtime才会执行一条SQL语句来加载属于当前Order的OrderItems
 Collection orderItems = order.getOrderItems();
 ```
-这样的查询性能上有不足的地方。为了查询N个Order，我们需要一条SQL语句获得所有的Order的原始/对象属性， 但需要另外N条语句获得每个Order的orderItems集合属性。为了避免N+1的性能问题，我们可以利用join fetch一次过用一条SQL语句把Order的所有信息查询出来。
+这样的查询性能上有不足的地方。为了查询N个Order，我们需要一条SQL语句获得所有的Order的原始/对象属性，但需要另外N条语句获得每个Order的orderItems集合属性。为了避免N+1的性能问题，我们可以利用join fetch一次过用一条SQL语句把Order的所有信息查询出来。
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
 final Query query = entityManager.createQuery( "select o from Order oinner join fetch o.orderItems where o.address.streetNumber=2000 order by o.id");
@@ -246,15 +258,22 @@ List result = query.getResultList();
 ```
 ### 使用操作符LIKE
 ```
-// 查询所有vender以字符串"foo"开头的Order
-Query query = managerNew.createQuery("select o FROM Order as o where o.vender like 'foo%' order by o.vender desc");List result = query.getResultList();
+// 查询所有vender以字符串"foo"开头的Order 
+Query query = managerNew.createQuery("select o FROM Order as o where o.vender like 'foo%' order by o.vender desc");
+List result = query.getResultList();
+
 // 查询所有vender以字符串"foo"结尾的Order
-Query query = managerNew.createQuery("select o FROM Order as o where o.vender like '%foo' order by o.vender desc");List result = query.getResultList();
+Query query = managerNew.createQuery("select o FROM Order as o where o.vender like '%foo' order by o.vender desc");
+List result = query.getResultList();
+
 // 可以结合NOT一起使用，比如查询所有vender不以以字符串"foo"结尾的Order
-Query query = managerNew.createQuery("select o FROM Order as o where o.vender not like '%foo' order by o.vender desc");List result = query.getResultList();
+Query query = managerNew.createQuery("select o FROM Order as o where o.vender not like '%foo' order by o.vender desc");
+List result = query.getResultList();
+
 // 可以结合escape使用，比如查询所有vender以"foo"开始的Order并忽略'3'字符。
 // 如果vender是"foo1", "foo2", "foo3"符合这个条件, 另外"3foo1", "f3oo4"也符合条件。
-Query query = managerNew.createQuery("select o FROM Order as o where o.vender like '%foo' escape '3' order by o.vender desc");List result = query.getResultList();
+Query query = managerNew.createQuery("select o FROM Order as o where o.vender like '%foo' escape '3' order by o.vender desc");
+List result = query.getResultList();
 ```
 
 ### 使用操作符IS NULL
@@ -285,11 +304,16 @@ query.setParameter(1, "partNumber");
 ```
 ### 使用操作符ALL/SOME/ANY
 ```
-Query query = managerNew.createQuery("select emp from EmployeeA emp where emp.salary > all ( select m.salary from Manager m where m.department = emp.department)");
+String sql = "select emp from EmployeeA emp where emp.salary > all ( select m.salary from Manager m where m.department = emp.department)";
+Query query = managerNew.createQuery(sql);
 List result = query.getResultList();
-Query query = managerNew.createQuery("select emp from EmployeeA emp where emp.salary > any ( select m.salary from Manager m where m.department = emp.department)");
+
+String sql1 = "select emp from EmployeeA emp where emp.salary > any ( select m.salary from Manager m where m.department = emp.department)"; 
+Query query = managerNew.createQuery(sql1);
 List result = query.getResultList();
-Query query = managerNew.createQuery("select emp from EmployeeA emp where emp.salary > some ( select m.salary from Manager m where m.department = emp.department)");
+
+String sql2 = "select emp from EmployeeA emp where emp.salary > some ( select m.salary from Manager m where m.department = emp.department)";
+Query query = managerNew.createQuery(sql2);
 List result = query.getResultList();
 ```
 
@@ -303,16 +327,23 @@ List result = query.getResultList();
 	* LOCATE 字符串定位
 ```
 // concat将参数中的两个字符串并结成一个字符串,这里firstName是"foo", lastName是"bar"
-Query query = entityManager.createQuery("select concat( o.owner.firstName, o.owner.lastName ) FROM Order AS o left outer join o.orderItems as oi where o.owner.firstName='foo'");
-List result = query.getResultList();assertEquals("foobar", result.get(0).toString());
+String sql = "select concat( o.owner.firstName, o.owner.lastName ) FROM Order AS o left outer join o.orderItems as oi where o.owner.firstName='foo'";
+Query query = entityManager.createQuery(sql);
+List result = query.getResultList();
+assertEquals("foobar", result.get(0).toString());
+
 // firstName是"fooBar",结果应该返回"oo"
-Query query = entityManager.createQuery("select o.vender,substring( o.owner.firstName, 1, 3 ), o.owner.info.age FROM Order AS o left outer join o.orderItems as oi where o.owner.firstName='charles'");
+String sql1 = "select o.vender,substring( o.owner.firstName, 1, 3 ), o.owner.info.age FROM Order AS o left outer join o.orderItems as oi where o.owner.firstName='charles'";
+Query query = entityManager.createQuery();
 List result = query.getResultList();
 Object[] row1 = (Object[]) result.get(0);assertEquals("oo", row1[1].toString());
+
 // 获得"ar"在firstName中地起始位置
-Query query = managerNew.createQuery("SELECT emp.firstName , emp.salary , locate( emp.firstName, 'ar') FROM EmployeeA as emp where emp.firstName='charles1111'");
+String sql2 = "SELECT emp.firstName , emp.salary , locate( emp.firstName, 'ar') FROM EmployeeA as emp where emp.firstName='charles1111'";
+Query query = managerNew.createQuery(sql2);
 List result = query.getResultList();
 ```
+
 计算函数EJB3 QL中定义的计算函数包括：
 	* ABS　绝对值
 	* SQRT 平方根
@@ -321,12 +352,15 @@ List result = query.getResultList();
 ```
 Query query = entityManager.createQuery("select o.vender, size( o.orderItems ) FROM Order o where o.owner.firstName = 'charles' group by o.vender order by o.vender desc");
 List result = query.getResultList();
+
 // 函数也可以用在条件中
 Query query = managerNew.createQuery("select o.vender, sum(o.amount) FROM Order AS o left join o.orderItems ot group by o.vender having size(o.orderItems) = 0 or lower( o.vender ) = 'foo' order by o.vender desc");
 List result = query.getResultList();
+
 // 取余数
 Query query = managerNew.createQuery("select mod( o.owner.info.age, 10 ) FROM Order o where exists ( select o from Order o where o.partNumber= :name ) and o.vender='order1' and exists ( select o from Order o where o.amount= :name1 ) order by o.vender desc");
 ```
+
 子查询子查询可以用于WHERE和HAVING条件语句中。
 ```
 Query query = managerNew.createQuery("select emp from EmployeeA as emp where ( select count(m) from Manager as m where m.department = emp.department) > 0 ");
