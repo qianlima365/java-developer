@@ -17,14 +17,9 @@ public class test() {
 }
 
 ```
-
-注意"from Order"。
-
 "Order"在EJB3查询中称为com.redsoft.samples.Order类的abstract schema Type。查询Entity在EJB3 QL中都是针对Entity的Abstract Schema Type进行查询。 
 
-在同一个EntityManagerFactory中，不允许同时有两个Abstract Schema Type相同的Entity类。
-比如不允许同时有com.redsoft.samples.Order和com.redsoft.foo.Order。
-
+在同一个EntityManagerFactory中，不允许同时有两个Abstract Schema Type相同的Entity类。比如不允许同时有com.redsoft.samples.Order和com.redsoft.foo.Order。
 Query返回一个List的集合结果，我们可以用Iterator或者List.get( int )的方法来获得每个符合条件的Entity。
 
 ### Liberator EJB3 Persistence运行环境的Query查询
@@ -196,40 +191,51 @@ select o.id, o.vender, o.partNumber, o.amount, addressTable.id, addressTable.str
 ```
 
 left join, left out join等义，都是允许符合条件的右边表达式中的Entiies为空。
+
 ```
 // 返回所有地址为2000的Order纪录，不管Order中是否有OrderItem
 final Query query = entityManager.createQuery( "select o from Order oleft join o.orderItems where o.address.streetNumber=2000 order by o.id");
 ```
 
 由于EJB3 QL默认采用left join。这样的查询和以下的EJB3 QL其实是等价的。
+
 ```
 // 返回所有地址为2000的Order纪录，不管Order中是否有OrderItem
 final Query query = entityManager.createQuery( "select o from Order owhere o.address.streetNumber=2000 order by o.id");
 ```
 
 需要显式使用left join/left outer join的情况会比较少。inner join要求右边的表达式必须返回Entities。
+
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
 final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");
 ```
+
 ### left/left out/inner join 
 fetch提供了一种灵活的查询加载方式来提高查询的性能。在默认的查询中，Entity中的集合属性默认不会被关联，集合属性默认是缓加载( lazy-load )。
+
 ```
 // 默认EJB3 QL编译后不关联集合属性变量(orderItems)对应的表
 final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");final List result = query.getResultList();
+
 // 这时获得Order实体中orderItems( 集合属性变量 )为空
 final Order order = (Order)result.get( 0 )
+
 // 当应用需要时，EJB3 Runtime才会执行一条SQL语句来加载属于当前Order的OrderItems
 Collection orderItems = order.getOrderItems();
 ```
+
 这样的查询性能上有不足的地方。为了查询N个Order，我们需要一条SQL语句获得所有的Order的原始/对象属性，但需要另外N条语句获得每个Order的orderItems集合属性。为了避免N+1的性能问题，我们可以利用join fetch一次过用一条SQL语句把Order的所有信息查询出来。
+
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
 final Query query = entityManager.createQuery( "select o from Order oinner join fetch o.orderItems where o.address.streetNumber=2000 order by o.id");
 ```
+
 由于使用了fetch,这个查询只会产生一条SQL语句，比原来需要N+1条SQL语句在性能上有了极大的提升。比较Entity在查询中使用参数查询时，参数类型除了String, 原始数据类型( int, double等)和它们的对象类型( Integer, Double等),也可以是Entity的实例。
 ```
-final Query query = entityManager.createQuery( "select o from Order o where o.address = ?1 order by o.id");final Address address = new Address( 2001, "foo street", "foo city", "foo province" );
+final Query query = entityManager.createQuery( "select o from Order o where o.address = ?1 order by o.id");
+final Address address = new Address( 2001, "foo street", "foo city", "foo province" );
 // 直接把address对象作为参数。
 query.setParameter( 1, address );
 ```
@@ -300,6 +306,7 @@ IS EMPTY是针对集合属性(Collection)的操作符。可以和NOT一起使用
 // 查询orderItems集合为空的Order
 Query query = managerNew.createQuery("select o FROM Order o where o.orderItems is empty by o.vender desc");
 List result = query.getResultList();
+
 // 查询orderItems集合非空的Order
 Query query = managerNew.createQuery("select o FROM Order o where o.orderItems is not empty by o.vender desc");
 List result = query.getResultList();
