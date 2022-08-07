@@ -155,7 +155,8 @@ final Query query= entityManager.createQuery( "select o.vender, o.partNumber, su
 ```
 // 返回所有的订单的生产厂商是"foo"的货物号码和每种货物的订单价值总额
 // 这里"having o.vender = 'foo'为条件
-final Query query= entityManager.createQuery( "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber having o.vender='foo'");
+String sql = "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber having o.vender='foo'";
+final Query query= entityManager.createQuery(sql);
 ```
 
 在"HAVING"语句里可以跟"WHERE"语句一样使用参数。
@@ -194,21 +195,24 @@ left join, left out join等义，都是允许符合条件的右边表达式中�
 
 ```
 // 返回所有地址为2000的Order纪录，不管Order中是否有OrderItem
-final Query query = entityManager.createQuery( "select o from Order oleft join o.orderItems where o.address.streetNumber=2000 order by o.id");
+String sql = "select o from Order oleft join o.orderItems where o.address.streetNumber=2000 order by o.id";
+final Query query = entityManager.createQuery(sql);
 ```
 
 由于EJB3 QL默认采用left join。这样的查询和以下的EJB3 QL其实是等价的。
 
 ```
 // 返回所有地址为2000的Order纪录，不管Order中是否有OrderItem
-final Query query = entityManager.createQuery( "select o from Order owhere o.address.streetNumber=2000 order by o.id");
+String sql = "select o from Order owhere o.address.streetNumber=2000 order by o.id";
+final Query query = entityManager.createQuery(sql);
 ```
 
 需要显式使用left join/left outer join的情况会比较少。inner join要求右边的表达式必须返回Entities。
 
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
-final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");
+String sql = "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id";
+final Query query = entityManager.createQuery(sql);
 ```
 
 ### left/left out/inner join 
@@ -216,7 +220,9 @@ fetch提供了一种灵活的查询加载方式来提高查询的性能。在默
 
 ```
 // 默认EJB3 QL编译后不关联集合属性变量(orderItems)对应的表
-final Query query = entityManager.createQuery( "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id");final List result = query.getResultList();
+String sql = "select o from Order oinner join o.orderItems where o.address.streetNumber=2000 order by o.id";
+final Query query = entityManager.createQuery(sql);
+final List result = query.getResultList();
 
 // 这时获得Order实体中orderItems( 集合属性变量 )为空
 final Order order = (Order)result.get( 0 )
@@ -229,7 +235,8 @@ Collection orderItems = order.getOrderItems();
 
 ```
 // 返回所有地址为2000的Order纪录，Order中必须有OrderItem
-final Query query = entityManager.createQuery( "select o from Order oinner join fetch o.orderItems where o.address.streetNumber=2000 order by o.id");
+String sql = "select o from Order oinner join fetch o.orderItems where o.address.streetNumber=2000 order by o.id";
+final Query query = entityManager.createQuery(sql);
 ```
 
 由于使用了fetch,这个查询只会产生一条SQL语句，比原来需要N+1条SQL语句在性能上有了极大的提升。比较Entity在查询中使用参数查询时，参数类型除了String, 原始数据类型( int, double等)和它们的对象类型( Integer, Double等),也可以是Entity的实例。
@@ -242,7 +249,8 @@ query.setParameter( 1, address );
 
 ### 批量更新(Batch Update)
 ```
-Query query = managerNew.createQuery("update Order as o set o.vender=:newvender, o.partNumber='fooPart' where o.vender = 'foo'");
+String sql = "update Order as o set o.vender=:newvender, o.partNumber='fooPart' where o.vender = 'foo'";
+Query query = managerNew.createQuery(sql);
 query.setParameter("newvender", "barVender");
 // update的记录数
 int result = query.executeUpdate();
@@ -250,7 +258,9 @@ int result = query.executeUpdate();
 ### 批量删除(Batch Remove)
 ```
 Query query = managerNew.createQuery("DELETE FROM Order");
-int result = query.executeUpdate();Query query = managerNew.createQuery("DELETE FROM Order AS o WHERE o.vender='redsoft'");int result = query.executeUpdate();
+int result = query.executeUpdate();
+Query query = managerNew.createQuery("DELETE FROM Order AS o WHERE o.vender='redsoft'");
+int result = query.executeUpdate();
 ```
 ### 使用操作符NOT
 ```
@@ -264,18 +274,22 @@ int result = query.executeUpdate();
 ### 使用操作符BETWEEN
 ```
 // 查询所有价值amount在５和10之间的(包含5,10)的Order
-Query query = managerNew.createQuery("select o FROM Order AS o left join o.orderItems ot where o.amount BETWEEN 5 AND 10 order by o.vender desc");List result = query.getResultList();
+String sql = "select o FROM Order AS o left join o.orderItems ot where o.amount BETWEEN 5 AND 10 order by o.vender desc";
+Query query = managerNew.createQuery(sql);
+List result = query.getResultList();
 ```
 ### 使用操作符IN
 ```
 //查询所有vender是"foo1", "foo2"或者"foo3"的Order
-Query query = managerNew.createQuery("select o FROM Order AS o left join o.orderItems ot where o.vender in ( 'foo1', 'foo2', 'foo3' ) order by o.vender desc");
+String sql = "select o FROM Order AS o left join o.orderItems ot where o.vender in ( 'foo1', 'foo2', 'foo3' ) order by o.vender desc";
+Query query = managerNew.createQuery(sql);
 List result = query.getResultList();
 ```
 ### 使用操作符LIKE
 ```
 // 查询所有vender以字符串"foo"开头的Order 
-Query query = managerNew.createQuery("select o FROM Order as o where o.vender like 'foo%' order by o.vender desc");
+String sql = "select o FROM Order as o where o.vender like 'foo%' order by o.vender desc";
+Query query = managerNew.createQuery(sql);
 List result = query.getResultList();
 
 // 查询所有vender以字符串"foo"结尾的Order
@@ -314,9 +328,12 @@ List result = query.getResultList();
 ### 使用操作符EXISTS[NOT]
 EXISTS需要和子查询配合使用。
 ```
-Query query = manager.createQuery("select o FROM Order o where exists (select o from Order o where o.partNumber=?1) order by o.vender desc");
+String sql = "select o FROM Order o where exists (select o from Order o where o.partNumber=?1) order by o.vender desc";
+Query query = manager.createQuery(sql);
 query.setParameter(1, "partNumber");
-Query query = manager.createQuery("select o FROM Order o where o.vender='partNumber' and not exists (select o from Order o where o.partNumber=?1) order by o.vender desc");
+
+String sql = "select o FROM Order o where o.vender='partNumber' and not exists (select o from Order o where o.partNumber=?1) order by o.vender desc";
+Query query = manager.createQuery(sql);
 query.setParameter(1, "partNumber");
 ```
 ### 使用操作符ALL/SOME/ANY
@@ -371,19 +388,23 @@ List result = query.getResultList();
 	* MOD 取余数
 	* SIZE 取集合的数量
 ```
-Query query = entityManager.createQuery("select o.vender, size( o.orderItems ) FROM Order o where o.owner.firstName = 'charles' group by o.vender order by o.vender desc");
+String sql = "select o.vender, size( o.orderItems ) FROM Order o where o.owner.firstName = 'charles' group by o.vender order by o.vender desc";
+Query query = entityManager.createQuery(sql);
 List result = query.getResultList();
 
 // 函数也可以用在条件中
-Query query = managerNew.createQuery("select o.vender, sum(o.amount) FROM Order AS o left join o.orderItems ot group by o.vender having size(o.orderItems) = 0 or lower( o.vender ) = 'foo' order by o.vender desc");
+String sql = "select o.vender, sum(o.amount) FROM Order AS o left join o.orderItems ot group by o.vender having size(o.orderItems) = 0 or lower( o.vender ) = 'foo' order by o.vender desc";
+Query query = managerNew.createQuery(sql);
 List result = query.getResultList();
 
 // 取余数
-Query query = managerNew.createQuery("select mod( o.owner.info.age, 10 ) FROM Order o where exists ( select o from Order o where o.partNumber= :name ) and o.vender='order1' and exists ( select o from Order o where o.amount= :name1 ) order by o.vender desc");
+String sql = "select mod( o.owner.info.age, 10 ) FROM Order o where exists ( select o from Order o where o.partNumber= :name ) and o.vender='order1' and exists ( select o from Order o where o.amount= :name1 ) order by o.vender desc"
+Query query = managerNew.createQuery(sql);
 ```
 
 子查询子查询可以用于WHERE和HAVING条件语句中。
 ```
-Query query = managerNew.createQuery("select emp from EmployeeA as emp where ( select count(m) from Manager as m where m.department = emp.department) > 0 ");
+String sql = "select emp from EmployeeA as emp where ( select count(m) from Manager as m where m.department = emp.department) > 0 ";
+Query query = managerNew.createQuery(sql);
 List result = query.getResultList();
 ```
