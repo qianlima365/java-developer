@@ -123,7 +123,7 @@ HolderList result = query.getResultList();
 ```
 该java class不需要是Entity Class。NEW要求java class使用全名。聚合查询(Aggregation)象大部分的SQL一样,
 
-### EJB3 QL也支持查询中的聚合函数
+### 聚合函数
 目前EJB QL支持的聚合函数包括：
 	* AVG
 	* SUM
@@ -141,10 +141,12 @@ fina long max = Long.parseLong( result.toString() );
 ```
 
 聚合函数也可以作为被查询的一个属性返回。
+
 ```
 // 返回所有的订单的生产厂商和他们的订单价值总额
 final Query query= entityManager.createQuery( "select o.vender, sum(o.amount) FROM Order o　group by o.vender");");
 ```
+
 和SQL一样，如果聚合函数不是select...from的唯一一个返回列，需要使用"GROUP BY"语句。"GROUP BY"应该包含select语句中除了聚合函数外的所有属性。
 
 ```
@@ -152,6 +154,7 @@ final Query query= entityManager.createQuery( "select o.vender, sum(o.amount) FR
 // 注意group by后面必须包含o.vender和o.partNumber
 final Query query= entityManager.createQuery( "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber");
 ```
+
 如果还需要加上查询条件，需要使用"HAVING"条件语句而不是"WHERE"语句。
 
 ```
@@ -159,29 +162,38 @@ final Query query= entityManager.createQuery( "select o.vender, o.partNumber, su
 // 这里"having o.vender = 'foo'为条件
 final Query query= entityManager.createQuery( "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber having o.vender='foo'");
 ```
+
 在"HAVING"语句里可以跟"WHERE"语句一样使用参数。
+
 ```
 // 返回所有的订单的生产厂商是"foo"的货物号码和每种货物的订单价值总额
 // 这里"having o.vender = 'foo'为条件
-final Query query= entityManager.createQuery( "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber having o.vender=?1");
+String sql = "select o.vender, o.partNumber, sum(o.amount) FROM Order o　group by o.vender，o.partNumber having o.vender=?1";
+final Query query= entityManager.createQuery(sql);
 query.setParameter( 1, "foo" );
 final List result = query.getResultList();
 ```
+
 关联(join)在EJB3 QL中，大部分的情况下，使用对象属性都隐含了关联(join)。
+
 例如在以下查询中：
 ```
 final Query query = entityManager.createQuery( "select o from Order owhere o.address.streetNumber=2000 order by o.id");
 ```
+
 当这个句EJB3 QL编译成以下的SQL时就会自动包含了关联,EJB3 QL编译成SQL时关联默认取左关联(left join)。
+
 ```
 select o.id, o.vender, o.partNumber, o.amount, addressTable.id, addressTable.streetNumberfrom orderTable as o left join addressTable where addressTable.streetNumber = 2000
 ```
-但在一些情况下，我们仍然需要对关联做精确的控制。
 
+但在一些情况下，我们仍然需要对关联做精确的控制。
 因此EJB3 QL仍然支持和SQL中类似的关联语法：
+```
 	* left out join/left join
 	* inner join
 	* left join/inner join fetch
+```
 
 left join, left out join等义，都是允许符合条件的右边表达式中的Entiies为空。
 ```
@@ -222,16 +234,14 @@ final Query query = entityManager.createQuery( "select o from Order o where o.ad
 query.setParameter( 1, address );
 ```
 
-## 批量更新(Batch Update)
-EJB3 QL支持批量更新。
+### 批量更新(Batch Update)
 ```
 Query query = managerNew.createQuery("update Order as o set o.vender=:newvender, o.partNumber='fooPart' where o.vender = 'foo'");
 query.setParameter("newvender", "barVender");
 // update的记录数
 int result = query.executeUpdate();
 ```
-## 批量删除(Batch Remove)
-### EJB3 QL支持批量删除
+### 批量删除(Batch Remove)
 ```
 Query query = managerNew.createQuery("DELETE FROM Order");
 int result = query.executeUpdate();Query query = managerNew.createQuery("DELETE FROM Order AS o WHERE o.vender='redsoft'");int result = query.executeUpdate();
@@ -250,7 +260,7 @@ int result = query.executeUpdate();
 // 查询所有价值amount在５和10之间的(包含5,10)的Order
 Query query = managerNew.createQuery("select o FROM Order AS o left join o.orderItems ot where o.amount BETWEEN 5 AND 10 order by o.vender desc");List result = query.getResultList();
 ```
-使用操作符IN
+### 使用操作符IN
 ```
 //查询所有vender是"foo1", "foo2"或者"foo3"的Order
 Query query = managerNew.createQuery("select o FROM Order AS o left join o.orderItems ot where o.vender in ( 'foo1', 'foo2', 'foo3' ) order by o.vender desc");
@@ -317,7 +327,11 @@ Query query = managerNew.createQuery(sql2);
 List result = query.getResultList();
 ```
 
-字符串函数EJB3 QL定义了内置函数方便使用。这些函数的使用方法和SQL中相应的函数方法类似。EJB3 QL中定义的字符串函数包括：
+### 字符串函数
+
+EJB3 QL定义了内置函数，这些函数的使用方法和SQL中相应的函数方法类似。
+
+EJB3 QL中定义的字符串函数包括：
 	* CONCAT　字符串拼接
 	* SUBSTRING　字符串截取
 	* TRIM 去掉空格
@@ -334,7 +348,7 @@ assertEquals("foobar", result.get(0).toString());
 
 // firstName是"fooBar",结果应该返回"oo"
 String sql1 = "select o.vender,substring( o.owner.firstName, 1, 3 ), o.owner.info.age FROM Order AS o left outer join o.orderItems as oi where o.owner.firstName='charles'";
-Query query = entityManager.createQuery();
+Query query = entityManager.createQuery(sql1);
 List result = query.getResultList();
 Object[] row1 = (Object[]) result.get(0);assertEquals("oo", row1[1].toString());
 
