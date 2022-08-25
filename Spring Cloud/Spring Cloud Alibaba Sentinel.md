@@ -1,0 +1,2 @@
+[C语言中文网：Spring Cloud Alibaba Seata](http://c.biancheng.net/springcloud/sentinel.html)
+[NetIQ Sentinel是一个安全信息和事件管理 (SIEM) 解决方案](https://www.netiq.com/zh-cn/documentation/sentinel-81/install/data/b12ey5w9.html)
