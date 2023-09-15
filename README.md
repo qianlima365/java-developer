@@ -1,2 +1,2 @@
-# SpringStudy
-Spring学习记录
+# myjava
+学习记录
