@@ -4,7 +4,7 @@ EJB3的查询语言是一种和SQL非常类似的中间性和对象化查询语�
 ### Query接口
 javax.persistence.Query是EJB3查询操作的接口。
 进行查询，首先要通过EntityManager 获得Query对象。
-```
+```java
 public class test() {
     public Query createQuery(String ejbqlString);                                 
     // 下面我们做一个最简单的查询，查询所有的com.redsoft.samples.Order类。                    
