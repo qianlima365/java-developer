@@ -314,6 +314,7 @@ Awesome 系列虽然挺全，但基本只对收录的资源做了极为简要的
 * [Apache POI](http://www.importnew.com/poi/)：支持OOXML规范（XLSX、DOCX、PPTX）以及OLE2规范（XLS、DOC、PPT）。[官网](http://poi.apache.org/)
 * [documents4j](http://www.importnew.com/documents4j/)：使用第三方转换器进行文档格式转换，转成类似MS Word这样的格式。[官网](http://documents4j.com)
 * [jOpenDocument](http://www.importnew.com/jopendocument/)：处理OpenDocument格式（由Sun公司提出基于XML的文档格式）。[官网](http://www.jopendocument.org/)
+* [kkFileView](https://github.com/kekingcn/kkFileView)：使用spring boot打造文件文档在线预览项目解决方案，支持doc、docx、ppt、pptx、xls、xlsx、zip、rar、mp4、mp3以及众多类文本如txt、html、xml、java、properties、sql、js、md、json、conf、ini、vue、php、py、bat、gitignore等文件在线预览。[官网](https://kkfileview.keking.cn/zh-cn/index.html)
 
 <h3 id="functional-programming">函数式编程</h3>
 
